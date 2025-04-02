@@ -1,0 +1,19 @@
+{
+    "name": "libertjeremy/doctrine-helpers",
+    "type": "library",
+    "authors": [
+        {
+            "name": "libertjeremy",
+            "email": "contact@libertjeremy.fr"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "doctrine/orm": "^3.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "LibertJeremy\\Doctrine\\Helpers\\": "src/"
+        }
+    }
+}
