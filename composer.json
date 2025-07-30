@@ -9,7 +9,9 @@
     ],
     "require": {
         "php": "^8.3",
-        "doctrine/orm": "^2.15 || ^3.3"
+        "doctrine/orm": "^2.15 || ^3.3",
+        "symfony/doctrine-bridge": "^7.2",
+        "symfony/uid": "^7.2"
     },
     "autoload": {
         "psr-4": {
