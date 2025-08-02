@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace LibertJeremy\Doctrine\Helpers\Entity\Domain\Traits;
 
 use Doctrine\ORM\Mapping as ORM;
+use LibertJeremy\Doctrine\Helpers\Entity\Domain\Interfaces\UuidIdentifierAwareInterface;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
+/**
+ * @see UuidIdentifierAwareInterface::class
+ */
 trait UuidIdentifierTrait
 {
     #[ORM\Id]
