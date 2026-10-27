@@ -17,5 +17,14 @@
         "psr-4": {
             "LibertJeremy\\Doctrine\\Helpers\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LibertJeremy\\Doctrine\\Helpers\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.5 || ^12.0"
     }
 }
