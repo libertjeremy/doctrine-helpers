@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: pcov
+
+      - uses: ramsey/composer-install@v3
+
+      - run: vendor/bin/phpunit --coverage-clover coverage.xml
+
+      # Plancher : objectif de couverture du projet (> 80 %).
+      # Cliquet : relevé quand la couverture monte, jamais abaissé.
+      - name: Couverture minimale
+        if: matrix.php == '8.4'
+        env:
+          COVERAGE_MIN: 80
+        run: |
+          php -r '
+            $m = simplexml_load_file("coverage.xml")->project->metrics;
+            $p = 100 * (int) $m["coveredstatements"] / max(1, (int) $m["statements"]);
+            printf("Line coverage: %.1f%% (min %s%%)\n", $p, getenv("COVERAGE_MIN"));
+            exit($p < (float) getenv("COVERAGE_MIN") ? 1 : 0);
+          '
+
+  phpstan:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - run: vendor/bin/phpstan analyse --no-progress
+
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Seul check requis par la protection de main : agrège la matrice et les autres jobs.
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [tests, phpstan, secret-scan]
+    runs-on: ubuntu-latest
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+        run: exit 1
+      - run: echo "CI verte"
