@@ -105,7 +105,7 @@ final class JoinHelper
     }
 
     /**
-     * Rebuilds the join part in the same order through the public join API, with $replaced swapped for $replacement.
+     * Rebuilds the join part in the same order, under the same root aliases, with $replaced swapped for $replacement.
      *
      * @param array<string, list<Join>> $joinParts
      */
@@ -113,21 +113,12 @@ final class JoinHelper
     {
         $builder->resetDQLPart('join');
 
-        foreach ($joinParts as $joins) {
+        foreach ($joinParts as $rootAlias => $joins) {
             foreach ($joins as $existing) {
-                self::addExistingJoin($builder, $existing === $replaced ? $replacement : $existing);
+                // Same call shape as QueryBuilder::innerJoin(); the ORM stub types add()'s array argument too narrowly.
+                $builder->add('join', [$rootAlias => $existing === $replaced ? $replacement : $existing], true); // @phpstan-ignore argument.type
             }
         }
-    }
-
-    private static function addExistingJoin(QueryBuilder $builder, Join $join): void
-    {
-        $alias = $join->getAlias() ?? throw new \LogicException('A join added through the QueryBuilder always has an alias.');
-
-        match ($join->getJoinType()) {
-            Join::INNER_JOIN => $builder->innerJoin($join->getJoin(), $alias, $join->getConditionType(), $join->getCondition(), $join->getIndexBy()),
-            Join::LEFT_JOIN => $builder->leftJoin($join->getJoin(), $alias, $join->getConditionType(), $join->getCondition(), $join->getIndexBy()),
-        };
     }
 
     private static function mergeConditions(string|Comparison|Composite|Func|null $existingCondition, string $condition): string|Comparison|Composite|Func
